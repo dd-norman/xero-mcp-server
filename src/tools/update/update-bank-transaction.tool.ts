@@ -3,12 +3,23 @@ import { CreateXeroTool } from "../../helpers/create-xero-tool.js";
 import { updateXeroBankTransaction } from "../../handlers/update-xero-bank-transaction.handler.js";
 import { bankTransactionDeepLink } from "../../consts/deeplinks.js";
 
+const trackingSchema = z.object({
+  name: z.string().describe("The name of the tracking category. Can be obtained from the list-tracking-categories tool"),
+  option: z.string().describe("The name of the tracking option. Can be obtained from the list-tracking-categories tool"),
+  trackingCategoryID: z.string().describe("The ID of the tracking category. \
+    Can be obtained from the list-tracking-categories tool"),
+});
+
 const lineItemSchema = z.object({
   description: z.string(),
   quantity: z.number(),
   unitAmount: z.number(),
   accountCode: z.string(),
   taxType: z.string(),
+  tracking: z.array(trackingSchema).max(2).describe("Up to 2 tracking categories and options can be added to the line item. \
+    Can be obtained from the list-tracking-categories tool. \
+    Any tracking not provided will be removed from the line item, so include the line's existing tracking \
+    (shown by the list-bank-transactions tool) unless the user asked to change it.").optional(),
 });
 
 const UpdateBankTransactionTool = CreateXeroTool(
@@ -51,7 +62,7 @@ const UpdateBankTransactionTool = CreateXeroTool(
       };
     }
 
-    const bankTransaction = result.result;
+    const { bankTransaction, historyNote, historyNoteError } = result.result;
 
     const deepLink = bankTransaction.bankAccount.accountID && bankTransaction.bankTransactionID
       ? bankTransactionDeepLink(bankTransaction.bankAccount.accountID, bankTransaction.bankTransactionID)
@@ -68,7 +79,10 @@ const UpdateBankTransactionTool = CreateXeroTool(
             `Contact: ${bankTransaction?.contact?.name}`,
             `Total: ${bankTransaction?.total}`,
             `Status: ${bankTransaction?.status}`,
-            deepLink ? `Link to view: ${deepLink}` : null
+            deepLink ? `Link to view: ${deepLink}` : null,
+            historyNoteError
+              ? `Warning: the update was saved, but the History & Notes entry could not be added: ${historyNoteError}`
+              : `History note added: ${historyNote}`
           ].filter(Boolean).join("\n"),
         },
       ],

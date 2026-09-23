@@ -94,6 +94,7 @@ class CustomConnectionsXeroClient extends MCPXeroClient {
     "accounting.invoices",
     "accounting.payments",
     "accounting.banktransactions",
+    "accounting.attachments",
     "accounting.manualjournals",
     "accounting.reports.aged.read",
     "accounting.reports.balancesheet.read",

@@ -1,5 +1,13 @@
 # Xero MCP Server
 
+> **This is a fork.** It is based on the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/xero-mcp-server) at version `0.0.17`, and is published as `0.0.17-fork.1`. It is not maintained by or affiliated with Xero.
+>
+> **What this fork adds:**
+> - A new `upload-bank-transaction-attachment` tool
+> - `update-bank-transaction` fixes and features: correct totals when amounts change, tracking categories on line items, the originating app's "Go to [app]" button kept, and a descriptive History & Notes entry after each update
+>
+> See [FORK_CHANGES.md](FORK_CHANGES.md) for every change, and how to re-apply them when upgrading to a newer upstream version.
+
 This is a Model Context Protocol (MCP) server implementation for Xero. It provides a bridge between the MCP protocol and Xero's API, allowing for standardized access to Xero's accounting and business features.
 
 ## Features
@@ -173,7 +181,8 @@ payroll.timesheets
 - `create-payroll-timesheet`: Create a new Payroll Timesheet
 - `create-tracking-category`: Create a new tracking category
 - `create-tracking-option`: Create a new tracking option
-- `update-bank-transaction`: Update an existing bank transaction
+- `upload-bank-transaction-attachment`: Attach a local PDF or image to an existing bank transaction (added in this fork)
+- `update-bank-transaction`: Update an existing bank transaction, including line-item tracking categories; adds a descriptive History & Notes entry (extended in this fork)
 - `update-contact`: Update an existing contact
 - `update-invoice`: Update an existing draft invoice
 - `update-item`: Update an existing item
