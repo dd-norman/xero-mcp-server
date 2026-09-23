@@ -1,6 +1,6 @@
 # Fork changes
 
-This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/xero-mcp-server) adds bank transaction fixes and features. This file records every change made on top of upstream, so the changes can be re-applied when upgrading to a newer upstream release.
+This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/xero-mcp-server) adds bank transaction fixes and features. This file records every change made on top of upstream, and how upstream updates are merged in.
 
 **Current version:** `0.0.17-fork.1`, which is upstream `0.0.17` plus fork patch set 1.
 
@@ -11,6 +11,14 @@ This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/x
 | Upstream commit | [`6d30b75`](https://github.com/XeroAPI/xero-mcp-server/commit/6d30b75) "upgrade dependencies" |
 | Upstream branch | `bump-package-to-0.0.17` (not yet merged into upstream `main` or released when this fork was patched) |
 | Upstream version | `0.0.17` |
+| Upstream `main` merged in | [`f24583c`](https://github.com/XeroAPI/xero-mcp-server/commit/f24583c) (see [change 8](#8-merged-upstream-main-payroll-import-shims-165)) |
+
+## Branches
+
+| Branch | Contents |
+|---|---|
+| `main` | An exact copy of upstream `main`. Fork changes are never committed here. |
+| `main-forked` | Upstream plus the fork changes below. This is the branch to build and run. |
 
 ## Summary of changes
 
@@ -158,8 +166,14 @@ Merged upstream `main` at [`f24583c`](https://github.com/XeroAPI/xero-mcp-server
 
 ## Upgrading to a newer upstream version
 
-1. Fetch the new upstream release from `XeroAPI/xero-mcp-server`.
-2. Re-apply the changes above. Changes 3–6 all live in the bank transaction update handler and tool, plus the two helper files.
-3. Check whether upstream has fixed any of the same issues. If it has, drop that patch rather than applying it twice.
-4. Run `npm install`, `npm run build` and `npm test`.
-5. Bump the version to `<new upstream version>-fork.1`, and add an entry to this file.
+Upstream updates are **merged** into `main-forked`, not rebased, so history that has already been pushed is never rewritten.
+
+1. Fetch upstream: `git fetch upstream`.
+2. Bring the fork's `main` up to date with upstream `main` (GitHub's "Sync fork" button, or `gh repo sync <fork> -b main`).
+3. Preview conflicts: `git merge-tree --write-tree --name-only main-forked upstream/main`.
+4. On `main-forked`, run `git merge --no-ff --no-commit upstream/main` and resolve any conflicts. If upstream has made the same fix as a fork change, keep upstream's version and note the fork change as no longer needed.
+5. Run `npm install`, `npm run build` and `npm test`. This fork uses `xero-node` 20.0.0, which is newer than upstream's version, so check that new upstream code still compiles against it.
+6. Add an entry to this file: the upstream commit merged, any conflicts and how they were resolved, and test results. Then commit the merge.
+7. Restart the MCP clients and test live against Xero before pushing.
+8. Push with a normal `git push origin main-forked`. No force-push is needed.
+9. If upstream released a new version, bump this fork to `<new upstream version>-fork.1`.
