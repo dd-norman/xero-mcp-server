@@ -23,6 +23,7 @@ This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/x
 | 5 | [Keep the original app's "Go to [app]" button after updates](#5-keep-the-original-apps-go-to-app-button-after-updates) | Claude Code | 2026-09-23 |
 | 6 | [Descriptive History & Notes entry after each update](#6-descriptive-history--notes-entry-after-each-update) | Claude Code | 2026-09-23 |
 | 7 | [Version renamed to `0.0.17-fork.1`](#7-version-renamed-to-0017-fork1) | Claude Code | 2026-09-23 |
+| 8 | [Merged upstream `main` (payroll import shims, #165)](#8-merged-upstream-main-payroll-import-shims-165) | Claude Code | 2026-09-23 |
 
 ---
 
@@ -142,6 +143,16 @@ Also changed: `package.json`, `package-lock.json`.
 **Made by:** Claude Code, 2026-09-23
 
 `package.json` version changed from `0.0.17` to `0.0.17-fork.1`. The server reads its version when it starts and sends it to Xero in its user-agent (`xero-mcp-server-0.0.17-fork.1`). The `-fork.1` suffix marks this as a patched copy of upstream 0.0.17, so it won't be confused with a future official `0.0.18`.
+
+## 8. Merged upstream `main` (payroll import shims, #165)
+
+**Made by:** Claude Code, 2026-09-23
+
+Merged upstream `main` at [`f24583c`](https://github.com/XeroAPI/xero-mcp-server/commit/f24583c) "refactor: add import shim layer for payroll types (#165)". This commit was on upstream `main` but not on the `bump-package-to-0.0.17` branch this fork was based on. It moves the payroll type imports into `src/types/payroll-nz-types.ts` and `src/types/payroll-au-types.ts`.
+
+**Conflict:** `src/tools/list/list-payroll-employee-leave-types.tool.ts`. Both sides had renamed "Hours Accrued Annually" to "Units Accrued Annually". Upstream's version also adds "Type of Units" and removes a duplicate "Leave Type ID" line, so upstream's version was kept as is.
+
+**Tested:** `npm run build` and `npm test` (22 tests) pass with `xero-node` 20.0.0.
 
 ---
 
