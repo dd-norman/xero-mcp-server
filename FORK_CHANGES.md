@@ -33,6 +33,7 @@ This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/x
 | 7 | [Version renamed to `0.0.17-fork.1`](#7-version-renamed-to-0017-fork1) | Claude Code | 2026-09-23 |
 | 8 | [Merged upstream `main` (payroll import shims, #165)](#8-merged-upstream-main-payroll-import-shims-165) | Claude Code | 2026-09-23 |
 | 9 | [New tool: `create-bank-transfer`](#9-new-tool-create-bank-transfer) | Codex | 2026-09-23 |
+| 10 | [Turn tools off per connection with `XERO_DISABLED_TOOLS`](#10-turn-tools-off-per-connection-with-xero_disabled_tools) | Claude Code | 2026-09-25 |
 
 ---
 
@@ -176,6 +177,20 @@ Creates a native Xero transfer between two bank or credit card accounts. For a c
 **Files:** `src/handlers/create-xero-bank-transfer.handler.ts`, `src/tools/create/create-bank-transfer.tool.ts`, `src/tools/create/index.ts`, and a focused handler test. The local version is now `0.0.17-fork.2`.
 
 **Tested:** `npm run build`, `npm run lint`, and `npm test` (24 tests) pass. A fresh local MCP server advertises the new tool. Read back an existing reference transfer and a new credit card payment in a live organisation through Xero's transfer and bank transaction APIs. The new card entry is `RECEIVE-TRANSFER`, the checking entry is `SPEND-TRANSFER`, and both are unreconciled.
+
+## 10. Turn tools off per connection with `XERO_DISABLED_TOOLS`
+
+**Made by:** Claude Code, 2026-09-25
+
+Each MCP client connection can now leave out tools it does not need. Set `XERO_DISABLED_TOOLS` in that connection's `env` to a comma-separated list of group names and/or individual tool names, for example `"payroll, quotes, items"` or `"delete-timesheet"`. Matching ignores case and spaces. Unknown entries are skipped with a warning on stderr. If the variable is not set, every tool is registered as before.
+
+**Groups:** `payroll` (the 14 payroll employee, leave and timesheet tools), `quotes` (3 tools), `items` (3 tools).
+
+**Why:** fewer tools means a shorter tool list for the AI to choose from, less context used when tool definitions are loaded, and no accidental use of tools a connection should not touch.
+
+**Files:** new `src/tools/tool-filter.ts` (group table and matching), `src/tools/tool-factory.ts` (filters before registering), and `src/tools/__tests__/tool-filter.test.ts`. No individual tool files changed.
+
+**Tested:** `npm run build`, `npm test` (27 tests) and eslint on the changed files pass. A fresh local server lists 53 tools with the variable unset and 33 with `"payroll, quotes, items"`, with none of the 20 disabled tools remaining.
 
 
 ---

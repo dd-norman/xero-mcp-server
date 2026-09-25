@@ -91,6 +91,8 @@ To add the MCP server to Claude go to Settings > Developer > Edit config and add
 
 The `XERO_SCOPES` variable is optional. If omitted, the default scopes listed above will be used.
 
+To leave out tools a connection doesn't need, add the optional `XERO_DISABLED_TOOLS` variable to `env`: a comma-separated list of groups (`payroll`, `quotes`, `items`) and/or individual tool names, for example `"XERO_DISABLED_TOOLS": "payroll, quotes, delete-timesheet"`. If omitted, all tools are available.
+
 NOTE: If you are using [Node Version Manager](https://github.com/nvm-sh/nvm) `"command": "npx"` section change it to be the full path to the executable, ie: `your_home_directory/.nvm/versions/node/v22.14.0/bin/npx` on Mac / Linux or `"your_home_directory\\.nvm\\versions\\node\\v22.14.0\\bin\\npx"` on Windows
 
 #### 2. Bearer Token
