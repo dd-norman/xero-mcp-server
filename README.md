@@ -1,9 +1,10 @@
 # Xero MCP Server
 
-> **This is a fork.** It is based on the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/xero-mcp-server) at version `0.0.17`, and is published as `0.0.17-fork.1`. It is not maintained by or affiliated with Xero.
+> **This is a fork.** It is based on the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/xero-mcp-server) at version `0.0.17`, and runs locally as `0.0.17-fork.2`. It is not maintained by or affiliated with Xero.
 >
 > **What this fork adds:**
 > - A new `upload-bank-transaction-attachment` tool
+> - A new `create-bank-transfer` tool for payments between bank and credit card accounts
 > - `update-bank-transaction` fixes and features: correct totals when amounts change, tracking categories on line items, the originating app's "Go to [app]" button kept, and a descriptive History & Notes entry after each update
 >
 > See [FORK_CHANGES.md](FORK_CHANGES.md) for every change, and how to re-apply them when upgrading to a newer upstream version.
@@ -171,6 +172,7 @@ payroll.timesheets
 - `list-contact-groups`: Retrieve a list of contact groups
 - `list-tracking-categories`: Retrieve a list of tracking categories
 - `create-bank-transaction`: Create a new bank transaction
+- `create-bank-transfer`: Create an unreconciled transfer between bank or credit card accounts
 - `create-contact`: Create a new contact
 - `create-credit-note`: Create a new credit note
 - `create-invoice`: Create a new invoice

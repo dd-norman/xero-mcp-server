@@ -2,7 +2,7 @@
 
 This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/xero-mcp-server) adds bank transaction fixes and features. This file records every change made on top of upstream, and how upstream updates are merged in.
 
-**Current version:** `0.0.17-fork.1`, which is upstream `0.0.17` plus fork patch set 1.
+**Current version:** `0.0.17-fork.2`, which is upstream `0.0.17` plus fork patch set 2.
 
 ## Base version
 
@@ -32,6 +32,7 @@ This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/x
 | 6 | [Descriptive History & Notes entry after each update](#6-descriptive-history--notes-entry-after-each-update) | Claude Code | 2026-09-23 |
 | 7 | [Version renamed to `0.0.17-fork.1`](#7-version-renamed-to-0017-fork1) | Claude Code | 2026-09-23 |
 | 8 | [Merged upstream `main` (payroll import shims, #165)](#8-merged-upstream-main-payroll-import-shims-165) | Claude Code | 2026-09-23 |
+| 9 | [New tool: `create-bank-transfer`](#9-new-tool-create-bank-transfer) | Codex | 2026-09-23 |
 
 ---
 
@@ -161,6 +162,21 @@ Merged upstream `main` at [`f24583c`](https://github.com/XeroAPI/xero-mcp-server
 **Conflict:** `src/tools/list/list-payroll-employee-leave-types.tool.ts`. Both sides had renamed "Hours Accrued Annually" to "Units Accrued Annually". Upstream's version also adds "Type of Units" and removes a duplicate "Leave Type ID" line, so upstream's version was kept as is.
 
 **Tested:** `npm run build` and `npm test` (22 tests) pass with `xero-node` 20.0.0.
+
+## 9. New tool: `create-bank-transfer`
+
+**Made by:** Codex, 2026-09-23
+
+Creates a native Xero transfer between two bank or credit card accounts. For a credit card payment, Xero creates a receipt on the card account and a matching payment on the checking account. Bank feed statement lines can then be matched to these account transactions. The tool explicitly leaves both sides unreconciled.
+
+**Inputs:** source and destination account IDs, a positive amount with at most two decimal places, a required date, and an optional reference. The same request uses a stable idempotency key to protect against a retry creating another transfer.
+
+**Output:** the transfer ID, both bank transaction IDs, reconciliation status, and links to both account transactions.
+
+**Files:** `src/handlers/create-xero-bank-transfer.handler.ts`, `src/tools/create/create-bank-transfer.tool.ts`, `src/tools/create/index.ts`, and a focused handler test. The local version is now `0.0.17-fork.2`.
+
+**Tested:** `npm run build`, `npm run lint`, and `npm test` (24 tests) pass. A fresh local MCP server advertises the new tool. Read back an existing reference transfer and a new credit card payment in a live organisation through Xero's transfer and bank transaction APIs. The new card entry is `RECEIVE-TRANSFER`, the checking entry is `SPEND-TRANSFER`, and both are unreconciled.
+
 
 ---
 
