@@ -11,6 +11,7 @@ import CreateQuoteTool from "./create-quote.tool.js";
 import CreateTrackingCategoryTool from "./create-tracking-category.tool.js";
 import CreateTrackingOptionsTool from "./create-tracking-options.tool.js";
 import UploadBankTransactionAttachmentTool from "./upload-bank-transaction-attachment.tool.js";
+import UploadInvoiceAttachmentTool from "./upload-invoice-attachment.tool.js";
 
 export const CreateTools = [
   CreateContactTool,
@@ -26,4 +27,5 @@ export const CreateTools = [
   CreateTrackingCategoryTool,
   CreateTrackingOptionsTool,
   UploadBankTransactionAttachmentTool,
+  UploadInvoiceAttachmentTool,
 ];

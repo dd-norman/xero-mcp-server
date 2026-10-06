@@ -1,6 +1,6 @@
 # Xero MCP Server
 
-> **This is a fork.** It is based on the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/xero-mcp-server) at version `0.0.17`, and runs locally as `0.0.17-fork.2`. It is not maintained by or affiliated with Xero.
+> **This is a fork.** It is based on the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/xero-mcp-server) at version `0.0.17`, and runs locally as `0.0.17-fork.3`. It is not maintained by or affiliated with Xero.
 >
 > **What this fork adds:**
 > - A new `upload-bank-transaction-attachment` tool

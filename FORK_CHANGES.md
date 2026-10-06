@@ -2,7 +2,7 @@
 
 This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/xero-mcp-server) adds bank transaction fixes and features. This file records every change made on top of upstream, and how upstream updates are merged in.
 
-**Current version:** `0.0.17-fork.2`, which is upstream `0.0.17` plus fork patch set 2.
+**Current version:** `0.0.17-fork.3`, which is upstream `0.0.17` plus fork patch set 3.
 
 ## Base version
 
@@ -34,6 +34,7 @@ This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/x
 | 8 | [Merged upstream `main` (payroll import shims, #165)](#8-merged-upstream-main-payroll-import-shims-165) | Claude Code | 2026-09-23 |
 | 9 | [New tool: `create-bank-transfer`](#9-new-tool-create-bank-transfer) | Codex | 2026-09-23 |
 | 10 | [Turn tools off per connection with `XERO_DISABLED_TOOLS`](#10-turn-tools-off-per-connection-with-xero_disabled_tools) | Claude Code | 2026-09-25 |
+| 11 | [New tool: `upload-invoice-attachment`](#11-new-tool-upload-invoice-attachment) | Claude Code | 2026-10-05 |
 
 ---
 
@@ -191,6 +192,30 @@ Each MCP client connection can now leave out tools it does not need. Set `XERO_D
 **Files:** new `src/tools/tool-filter.ts` (group table and matching), `src/tools/tool-factory.ts` (filters before registering), and `src/tools/__tests__/tool-filter.test.ts`. No individual tool files changed.
 
 **Tested:** `npm run build`, `npm test` (27 tests) and eslint on the changed files pass. A fresh local server lists 53 tools with the variable unset and 33 with `"payroll, quotes, items"`, with none of the 20 disabled tools remaining.
+
+
+## 11. New tool: `upload-invoice-attachment`
+
+**Made by:** Claude Code, 2026-10-05
+
+Attaches a local PDF or image to an existing Xero invoice or bill (bills are invoices of type `ACCPAY`), including drafts. This lets an AI client create a draft bill with `create-invoice` and then attach the supplier's invoice to it.
+
+**How it behaves:**
+- Same file checks, duplicate handling and download-and-compare verification as `upload-bank-transaction-attachment` (change 1).
+- Reads the invoice first, so a wrong ID fails before anything is uploaded, and the result reports the invoice number, type and contact.
+- `includeOnline` (whether a customer sees the file on the online invoice) is always off for bills, and off for sales invoices unless explicitly requested.
+
+**Files:**
+- `src/helpers/attachment-file.ts` (new): the file checks, moved out of the bank transaction attachment handler so both tools share them. No behaviour change for the bank tool.
+- `src/handlers/upload-xero-invoice-attachment.handler.ts` (new)
+- `src/tools/create/upload-invoice-attachment.tool.ts` (new)
+- `src/handlers/__tests__/upload-xero-invoice-attachment.test.ts` (new, 7 tests)
+- `src/handlers/upload-xero-bank-transaction-attachment.handler.ts`: imports the shared checks
+- `src/tools/create/index.ts`: registers the tool
+
+No new Xero scope is needed: `accounting.attachments` (change 1) covers invoice attachments. The tool is not in any `XERO_DISABLED_TOOLS` group. Version is now `0.0.17-fork.3`.
+
+**Tested:** `npm run build` and `npm test` (34 tests) pass. Live: attached a PDF to a new draft bill, confirmed it by download; a second upload of the same file was reported as already attached and not duplicated.
 
 
 ---
