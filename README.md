@@ -1,10 +1,11 @@
 # Xero MCP Server
 
-> **This is a fork.** It is based on the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/xero-mcp-server) at version `0.0.17`, and runs locally as `0.0.17-fork.3`. It is not maintained by or affiliated with Xero.
+> **This is a fork.** It is based on the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/xero-mcp-server) at version `0.0.17`, and runs locally as `0.0.17-fork.4`. It is not maintained by or affiliated with Xero.
 >
 > **What this fork adds:**
 > - A new `upload-bank-transaction-attachment` tool
 > - A new `create-bank-transfer` tool for payments between bank and credit card accounts
+> - New `delete-payment` and `void-invoice` tools, for removing a payment from a bill and voiding the bill
 > - `update-bank-transaction` fixes and features: correct totals when amounts change, tracking categories on line items, the originating app's "Go to [app]" button kept, and a descriptive History & Notes entry after each update
 >
 > See [FORK_CHANGES.md](FORK_CHANGES.md) for every change, and how to re-apply them when upgrading to a newer upstream version.
@@ -189,6 +190,7 @@ payroll.timesheets
 - `update-bank-transaction`: Update an existing bank transaction, including line-item tracking categories; adds a descriptive History & Notes entry (extended in this fork)
 - `update-contact`: Update an existing contact
 - `update-invoice`: Update an existing draft invoice
+- `void-invoice`: Void an approved invoice or bill that has no payments applied (added in this fork)
 - `update-item`: Update an existing item
 - `update-manual-journal`: Update an existing manual journal
 - `update-quote`: Update an existing draft quote
@@ -199,6 +201,7 @@ payroll.timesheets
 - `approve-payroll-timesheet`: Approve a Payroll Timesheet
 - `revert-payroll-timesheet`: Revert an approved Payroll Timesheet
 - `add-payroll-timesheet-line`: Add new line on an existing Payroll Timesheet
+- `delete-payment`: Delete a payment from an invoice or bill; refuses reconciled and batch payments (added in this fork)
 - `delete-payroll-timesheet`: Delete an existing Payroll Timesheet
 - `get-payroll-timesheet`: Retrieve an existing Payroll Timesheet
 

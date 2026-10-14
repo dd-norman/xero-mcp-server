@@ -2,7 +2,7 @@
 
 This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/xero-mcp-server) adds bank transaction fixes and features. This file records every change made on top of upstream, and how upstream updates are merged in.
 
-**Current version:** `0.0.17-fork.3`, which is upstream `0.0.17` plus fork patch set 3.
+**Current version:** `0.0.17-fork.4`, which is upstream `0.0.17` plus fork patch set 4.
 
 ## Base version
 
@@ -36,6 +36,7 @@ This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/x
 | 10 | [Turn tools off per connection with `XERO_DISABLED_TOOLS`](#10-turn-tools-off-per-connection-with-xero_disabled_tools) | Claude Code | 2026-09-25 |
 | 11 | [New tool: `upload-invoice-attachment`](#11-new-tool-upload-invoice-attachment) | Claude Code | 2026-10-05 |
 | 12 | [`list-payments` shows reconciled status and batch payments](#12-list-payments-shows-reconciled-status-and-batch-payments) | Claude Code | 2026-10-07 |
+| 13 | [New tools: `delete-payment` and `void-invoice`](#13-new-tools-delete-payment-and-void-invoice) | Claude Code | 2026-10-13 |
 
 ---
 
@@ -232,6 +233,38 @@ There is no separate batch payments tool: this is enough to tell which bills one
 **Files:** `src/tools/list/list-payments.tool.ts`
 
 **Tested:** `npm run build` and `npm test` (34 tests) pass. Live: three bills from one supplier, paid together by a single bank wire, each show the same Batch Payment ID, with a Batch Total equal to the wire amount.
+
+
+## 13. New tools: `delete-payment` and `void-invoice`
+
+**Made by:** Claude Code, 2026-10-13
+
+**Why:** in the expense report workflow, the expense app syncs approved employee expenses into Xero as one bill with a payment already applied. To keep the books consistent, that payment is removed, the bill is voided, and the expenses are recreated as separate supplier bills. `update-invoice` only works on draft bills, and no tool could remove a payment or void a bill, so a scheduled routine couldn't do the first two steps.
+
+**`delete-payment`** (input: `paymentId`)
+- Deletes the payment through Xero's Payments endpoint, which works by setting the payment's status to `DELETED`. This removes it from the bill or invoice it paid.
+- Reads the payment first and refuses if it is reconciled to a bank statement line (it must be unreconciled in Xero first), already deleted, or part of a batch payment. A batch payment is one bank payment covering several bills; Xero only removes it as a whole batch, which would unpay every bill in it, so that is left to a person in Xero. Nothing is sent to Xero in those cases.
+- Reads the payment again afterwards and shows it **before** and **after**: invoice number and ID, contact, amount, date, status, reconciled.
+
+**`void-invoice`** (input: `invoiceId`)
+- Sets an invoice or bill's status to `VOIDED`.
+- Only for invoices that are Awaiting Approval (`SUBMITTED`) or Awaiting Payment (`AUTHORISED`). Drafts are refused (drafts are deleted, not voided), as are invoices still carrying a payment; the message names the payment ID to remove with `delete-payment`. If Xero rejects the void for another reason, its own error text is shown.
+- Returns the status change and a deep link to the bill or invoice in Xero.
+
+**Safety:** both actions are irreversible in Xero. Both tool descriptions tell the AI to show the user the specific payment or bill and get explicit confirmation before **every** call, and never to act on several items with one confirmation. Neither tool is in an `XERO_DISABLED_TOOLS` group; a connection can turn them off by name (change 10).
+
+**Files:**
+- `src/handlers/delete-xero-payment.handler.ts` (new)
+- `src/handlers/void-xero-invoice.handler.ts` (new)
+- `src/tools/delete/delete-payment.tool.ts` (new), registered in `src/tools/delete/index.ts`
+- `src/tools/update/void-invoice.tool.ts` (new), registered in `src/tools/update/index.ts`
+- `src/handlers/__tests__/delete-payment-and-void-invoice.test.ts` (new, 8 tests)
+- `README.md`: version and tool list
+- `package.json`, `package-lock.json`: version is now `0.0.17-fork.4`
+
+No new Xero scope is needed: both use the accounting transactions scope that `update-invoice` and `create-payment` already use.
+
+**Tested:** `npm run build`, `npm test` (42 tests) and eslint on the new files pass. A fresh local build lists 56 tools, including both new ones. Not yet tested live against Xero.
 
 
 ---
