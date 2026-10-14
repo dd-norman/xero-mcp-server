@@ -11,7 +11,24 @@ function paymentFormatter(payment: Payment): string {
     payment.reference ? `Reference: ${payment.reference}` : null,
     payment.status ? `Status: ${payment.status}` : null,
     payment.paymentType ? `Payment Type: ${payment.paymentType}` : null,
+    payment.isReconciled !== undefined
+      ? `Reconciled: ${payment.isReconciled ? "Yes" : "No"}`
+      : null,
     payment.updatedDateUTC ? `Last Updated: ${payment.updatedDateUTC}` : null,
+    // Part of a Xero batch payment (one bank line paying several bills): show which batch, and its total.
+    payment.batchPaymentID || payment.batchPayment?.batchPaymentID
+      ? [
+          `Batch Payment ID: ${payment.batchPaymentID || payment.batchPayment?.batchPaymentID}`,
+          payment.batchPayment?.totalAmount !== undefined
+            ? `Batch Total: ${payment.batchPayment.totalAmount}`
+            : null,
+          payment.batchPayment?.reference
+            ? `Batch Reference: ${payment.batchPayment.reference}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : null,
     payment.account?.name
       ? `Account: ${payment.account.name} (${payment.account.accountID || "Unknown ID"})`
       : null,

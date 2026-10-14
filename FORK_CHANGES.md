@@ -35,6 +35,7 @@ This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/x
 | 9 | [New tool: `create-bank-transfer`](#9-new-tool-create-bank-transfer) | Codex | 2026-09-23 |
 | 10 | [Turn tools off per connection with `XERO_DISABLED_TOOLS`](#10-turn-tools-off-per-connection-with-xero_disabled_tools) | Claude Code | 2026-09-25 |
 | 11 | [New tool: `upload-invoice-attachment`](#11-new-tool-upload-invoice-attachment) | Claude Code | 2026-10-05 |
+| 12 | [`list-payments` shows reconciled status and batch payments](#12-list-payments-shows-reconciled-status-and-batch-payments) | Claude Code | 2026-10-07 |
 
 ---
 
@@ -216,6 +217,21 @@ Attaches a local PDF or image to an existing Xero invoice or bill (bills are inv
 No new Xero scope is needed: `accounting.attachments` (change 1) covers invoice attachments. The tool is not in any `XERO_DISABLED_TOOLS` group. Version is now `0.0.17-fork.3`.
 
 **Tested:** `npm run build` and `npm test` (34 tests) pass. Live: attached a PDF to a new draft bill, confirmed it by download; a second upload of the same file was reported as already attached and not duplicated.
+
+
+## 12. `list-payments` shows reconciled status and batch payments
+
+**Made by:** Claude Code, 2026-10-07
+
+`list-payments` now prints two more things Xero already sends back for each payment:
+- `Reconciled: Yes/No` (whether the payment is matched to a bank statement line). This line was already in the working copy, uncommitted, before this entry; it is recorded here so it isn't lost.
+- When the payment is part of a Xero **batch payment** (one bank payment that pays several bills): `Batch Payment ID`, `Batch Total` and, when set, `Batch Reference`. Bills paid in the same batch share the same Batch Payment ID.
+
+There is no separate batch payments tool: this is enough to tell which bills one bank payment covered.
+
+**Files:** `src/tools/list/list-payments.tool.ts`
+
+**Tested:** `npm run build` and `npm test` (34 tests) pass. Live: three bills from one supplier, paid together by a single bank wire, each show the same Batch Payment ID, with a Batch Total equal to the wire amount.
 
 
 ---
