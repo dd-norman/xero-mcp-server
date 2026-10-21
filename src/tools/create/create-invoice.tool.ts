@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createXeroInvoice } from "../../handlers/create-xero-invoice.handler.js";
 import { DeepLinkType, getDeepLink } from "../../helpers/get-deeplink.js";
 import { CreateXeroTool } from "../../helpers/create-xero-tool.js";
+import { formatLineItem } from "../../helpers/format-line-item.js";
 import { Invoice } from "xero-node";
 
 const trackingSchema = z.object({
@@ -19,8 +20,9 @@ const lineItemSchema = z.object({
   taxType: z.string().describe("The tax type of the line item - can be obtained from the list-tax-rates tool"),
   itemCode: z.string().describe("The item code of the line item - can be obtained from the list-items tool \
     If the item is not listed, add without an item code and ask the user if they would like to add an item code.").optional(),
-  tracking: z.array(trackingSchema).describe("Up to 2 tracking categories and options can be added to the line item. \
-    Can be obtained from the list-tracking-categories tool. \
+  tracking: z.array(trackingSchema).max(2).describe("Up to 2 tracking categories and options can be added to the line item. \
+    Tracking categories and their IDs differ between Xero organisations: call list-tracking-categories \
+    on this same organisation first, and never reuse a trackingCategoryID seen in another organisation. \
     Only use if prompted by the user.").optional(),
 });
 
@@ -77,6 +79,9 @@ const CreateInvoiceTool = CreateXeroTool(
             `Date: ${invoice?.date}`,
             `Total: ${invoice?.total}`,
             `Status: ${invoice?.status}`,
+            invoice?.lineItems?.length
+              ? `Line Items:\n${invoice.lineItems.map(formatLineItem).join("\n\n")}`
+              : null,
             deepLink ? `Link to view: ${deepLink}` : null,
           ]
             .filter(Boolean)

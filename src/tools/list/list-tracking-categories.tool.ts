@@ -5,7 +5,9 @@ import { formatTrackingOption } from "../../helpers/format-tracking-option.js";
 
 const ListTrackingCategoriesTool = CreateXeroTool(
   "list-tracking-categories",
-  "List all tracking categories in Xero, along with their associated tracking options.",
+  "List all tracking categories in Xero, along with their associated tracking options. \
+  Each Xero organisation has its own tracking categories and IDs, so call this on the organisation \
+  you are working in before adding tracking to invoices, bills or manual journals.",
   {
     includeArchived: z.boolean().optional()
       .describe("Determines whether or not archived categories will be returned. By default, no archived categories will be returned.")

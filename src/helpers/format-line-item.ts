@@ -1,4 +1,5 @@
 import { LineItem } from "xero-node";
+import { formatTracking } from "./format-tracking.js";
 
 export const formatLineItem = (lineItem: LineItem): string => {
   return [
@@ -9,11 +10,7 @@ export const formatLineItem = (lineItem: LineItem): string => {
     `Unit Amount: ${lineItem.unitAmount}`,
     `Account Code: ${lineItem.accountCode}`,
     `Tax Type: ${lineItem.taxType}`,
-    `Tracking: ${lineItem.tracking?.length
-      ? lineItem.tracking
-        .map((t) => `${t.name}: ${t.option} (trackingCategoryID: ${t.trackingCategoryID})`)
-        .join("; ")
-      : "None"}`,
+    `Tracking: ${formatTracking(lineItem.tracking)}`,
     `Line Amount: ${lineItem.lineAmount}`,
   ].join("\n");
 };

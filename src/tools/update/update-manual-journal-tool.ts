@@ -2,8 +2,16 @@ import { z } from "zod";
 import { CreateXeroTool } from "../../helpers/create-xero-tool.js";
 import { DeepLinkType, getDeepLink } from "../../helpers/get-deeplink.js";
 import { ensureError } from "../../helpers/ensure-error.js";
+import { formatTracking } from "../../helpers/format-tracking.js";
 import { LineAmountTypes, ManualJournal } from "xero-node";
 import { updateXeroManualJournal } from "../../handlers/update-xero-manual-journal.handler.js";
+
+const trackingSchema = z.object({
+  name: z.string().describe("The name of the tracking category. Can be obtained from the list-tracking-categories tool"),
+  option: z.string().describe("The name of the tracking option. Can be obtained from the list-tracking-categories tool"),
+  trackingCategoryID: z.string().describe("The ID of the tracking category. \
+    Can be obtained from the list-tracking-categories tool"),
+});
 
 const UpdateManualJournalTool = CreateXeroTool(
   "update-manual-journal",
@@ -31,7 +39,17 @@ const UpdateManualJournalTool = CreateXeroTool(
             .string()
             .optional()
             .describe("Optional tax type for the manual journal line"),
-          // TODO: TODO: tracking can be added here
+          tracking: z
+            .array(trackingSchema)
+            .max(2)
+            .optional()
+            .describe(
+              "Up to 2 tracking categories and options for the journal line. \
+              Tracking categories and their IDs differ between Xero organisations: call list-tracking-categories \
+              on this same organisation first, and never reuse a trackingCategoryID seen in another organisation. \
+              Any tracking not provided will be removed from the line, so include the line's existing tracking \
+              (from list-manual-journals) when changing other fields.",
+            ),
         }),
       )
       .describe(
@@ -99,6 +117,20 @@ const UpdateManualJournalTool = CreateXeroTool(
             type: "text" as const,
             text: [
               `Manual journal updated: ${manualJournal.narration} (ID: ${manualJournal.manualJournalID})`,
+              manualJournal.journalLines
+                ? manualJournal.journalLines
+                    .map((line) =>
+                      [
+                        `Line Amount: ${line.lineAmount}`,
+                        `Account Code: ${line.accountCode}`,
+                        line.description ? `Description: ${line.description}` : null,
+                        `Tracking: ${formatTracking(line.tracking)}`,
+                      ]
+                        .filter(Boolean)
+                        .join("\n"),
+                    )
+                    .join("\n\n")
+                : null,
               deepLink ? `Link to view: ${deepLink}` : null,
             ]
               .filter(Boolean)

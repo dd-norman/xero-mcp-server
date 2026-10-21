@@ -29,8 +29,11 @@ function paymentFormatter(payment: Payment): string {
           .filter(Boolean)
           .join("\n")
       : null,
-    payment.account?.name
-      ? `Account: ${payment.account.name} (${payment.account.accountID || "Unknown ID"})`
+    // Xero's Payments endpoint usually returns only the account's code and ID, not its name, so print
+    // whatever is there: it tells a bank payment from one booked to another account (e.g. "Due to ..."),
+    // which Xero never marks reconciled.
+    payment.account?.name || payment.account?.code || payment.account?.accountID
+      ? `Account: ${[payment.account.name, payment.account.code ? `Code ${payment.account.code}` : null].filter(Boolean).join(", ") || "Unknown"} (${payment.account.accountID || "Unknown ID"})`
       : null,
     payment.invoice
       ? [

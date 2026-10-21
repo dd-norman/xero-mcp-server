@@ -2,7 +2,7 @@
 
 This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/xero-mcp-server) adds bank transaction fixes and features. This file records every change made on top of upstream, and how upstream updates are merged in.
 
-**Current version:** `0.0.17-fork.4`, which is upstream `0.0.17` plus fork patch set 4.
+**Current version:** `0.0.17-fork.5`, which is upstream `0.0.17` plus fork patch set 5.
 
 ## Base version
 
@@ -37,6 +37,8 @@ This fork of the official [XeroAPI/xero-mcp-server](https://github.com/XeroAPI/x
 | 11 | [New tool: `upload-invoice-attachment`](#11-new-tool-upload-invoice-attachment) | Claude Code | 2026-10-05 |
 | 12 | [`list-payments` shows reconciled status and batch payments](#12-list-payments-shows-reconciled-status-and-batch-payments) | Claude Code | 2026-10-07 |
 | 13 | [New tools: `delete-payment` and `void-invoice`](#13-new-tools-delete-payment-and-void-invoice) | Claude Code | 2026-10-13 |
+| 14 | [`list-payments` always shows the payment's account](#14-list-payments-always-shows-the-payments-account) | Claude Code | 2026-10-15 |
+| 15 | [Tracking categories on manual journals, and visible on every invoice and journal line](#15-tracking-categories-on-manual-journals-and-visible-on-every-invoice-and-journal-line) | Claude Code | 2026-10-20 |
 
 ---
 
@@ -265,6 +267,37 @@ There is no separate batch payments tool: this is enough to tell which bills one
 No new Xero scope is needed: both use the accounting transactions scope that `update-invoice` and `create-payment` already use.
 
 **Tested:** `npm run build`, `npm test` (42 tests) and eslint on the new files pass. A fresh local build lists 56 tools, including both new ones. Not yet tested live against Xero.
+
+
+## 14. `list-payments` always shows the payment's account
+
+**Made by:** Claude Code, 2026-10-15
+
+**Why:** Xero's Payments endpoint returns the payment's account with only its code and ID (no name), so the existing `Account:` line never printed. The expense report tracker needs to tell a bank payment (which gets reconciled) from one booked to another account, e.g. an intercompany "Due to/from" account, which has no bank line and is never marked reconciled.
+
+**Change:** prints `Account: <name if any>, Code <code> (<accountID>)` whenever Xero sends any of the three.
+
+**Files:** `src/tools/list/list-payments.tool.ts`
+
+**Tested:** `npm run build` and `npm test` (42 tests) pass. Live (2026-10-15, after an app restart): a batch payment booked to an intercompany account prints `Account: Code <code> (<accountID>)`.
+
+
+## 15. Tracking categories on manual journals, and visible on every invoice and journal line
+
+**Made by:** Claude Code, 2026-10-20
+
+**Why:** manual journals could not carry tracking categories at all (upstream left "tracking can be added here" placeholders). Each Xero organisation has its own tracking categories, and updates replace every line, so the AI also needs to *see* a line's existing tracking before it edits anything, or the tags are silently removed.
+
+**Change:**
+- `create-manual-journal` and `update-manual-journal` accept an optional `tracking` list (max 2: `name`, `option`, `trackingCategoryID`) on each journal line and pass it to Xero.
+- New helper `formatTracking` prints tracking as `Name: Option (trackingCategoryID: …)`, or `None`. `formatLineItem` (invoices, bank transactions) now uses it, so invoice and journal lines read the same.
+- Tracking is printed on every line by `list-manual-journals`, `create-manual-journal` and `update-manual-journal`. `create-invoice` and `update-invoice` now print their line items (with tracking). `list-invoices` already did when `invoiceNumbers` is passed; its description now says so.
+- Tool descriptions (`list-tracking-categories`, create/update invoice, create/update manual journal) say categories and IDs differ per organisation, so always look them up on the organisation in use and never reuse an ID from another. The two update tools say to resend each line's existing tracking. `update-invoice` previously said to use tracking "only if prompted", which would drop existing tags on any edit.
+- Fixes `create-manual-journal` printing journal lines as `[object Object]`.
+
+**Files:** `src/helpers/format-tracking.ts` (new), `src/helpers/__tests__/format-tracking.test.ts` (new), `src/helpers/format-line-item.ts`, `src/handlers/create-xero-manual-journal.handler.ts`, `src/handlers/update-xero-manual-journal.handler.ts`, `src/tools/create/create-manual-journal.tool.ts`, `src/tools/update/update-manual-journal-tool.ts`, `src/tools/list/list-manual-journals.tool.ts`, `src/tools/create/create-invoice.tool.ts`, `src/tools/update/update-invoice.tool.ts`, `src/tools/list/list-invoices.tool.ts`, `src/tools/list/list-tracking-categories.tool.ts`; `package.json`, `package-lock.json`, `README.md`: version is now `0.0.17-fork.5` (covers changes 14 and 15)
+
+**Tested:** `npm run build`, `npm test` (44 tests) and eslint on the changed files pass. Live, read-only (2026-10-20, after an app restart): `list-tracking-categories` on seven organisations returned each one's own categories (0 to 2 per organisation, with different names); `list-manual-journals` printed each line's tracking (tagged and `None` lines on the same journal); `list-invoices` with `invoiceNumbers` printed `Tracking: None` on an untagged bill. Live write (same day): `create-manual-journal` made a 1.00 draft journal with one tagged and one untagged line; both the create output and a separate `list-manual-journals` read-back showed the tag on the first line and `None` on the second. `update-manual-journal` with tracking not yet tested live.
 
 
 ---

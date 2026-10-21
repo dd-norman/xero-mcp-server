@@ -18,7 +18,10 @@ const ListInvoicesTool = CreateXeroTool(
     invoiceNumbers: z
       .array(z.string())
       .optional()
-      .describe("If provided, invoice line items will also be returned"),
+      .describe(
+        "If provided, invoice line items (including each line's tracking categories) will also be returned. \
+        Pass this before updating an invoice so existing tracking can be kept.",
+      ),
   },
   async ({ page, contactIds, invoiceNumbers }) => {
     const response = await listXeroInvoices(page, contactIds, invoiceNumbers);

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { updateXeroInvoice } from "../../handlers/update-xero-invoice.handler.js";
 import { DeepLinkType, getDeepLink } from "../../helpers/get-deeplink.js";
 import { CreateXeroTool } from "../../helpers/create-xero-tool.js";
+import { formatLineItem } from "../../helpers/format-line-item.js";
 import { Invoice } from "xero-node";
 
 const trackingSchema = z.object({
@@ -20,9 +21,11 @@ const lineItemSchema = z.object({
   itemCode: z.string().describe("The item code of the line item - can be obtained from the list-items tool \
     If the item was not populated in the original invoice, \
     add without an item code unless the user has told you to add an item code.").optional(),
-  tracking: z.array(trackingSchema).describe("Up to 2 tracking categories and options can be added to the line item. \
-    Can be obtained from the list-tracking-categories tool. \
-    Only use if prompted by the user.").optional(),
+  tracking: z.array(trackingSchema).max(2).describe("Up to 2 tracking categories and options can be added to the line item. \
+    Tracking categories and their IDs differ between Xero organisations: call list-tracking-categories \
+    on this same organisation first, and never reuse a trackingCategoryID seen in another organisation. \
+    Any tracking not provided will be removed from the line item, so always include the line's existing tracking \
+    (from list-invoices with invoiceNumbers). Only add or change tracking if prompted by the user.").optional(),
 });
 
 const UpdateInvoiceTool = CreateXeroTool(
@@ -108,8 +111,13 @@ const UpdateInvoiceTool = CreateXeroTool(
             `Type: ${invoice?.type}`,
             `Total: ${invoice?.total}`,
             `Status: ${invoice?.status}`,
+            invoice?.lineItems?.length
+              ? `Line Items:\n${invoice.lineItems.map(formatLineItem).join("\n\n")}`
+              : null,
             deepLink ? `Link to view: ${deepLink}` : null,
-          ].join("\n"),
+          ]
+            .filter(Boolean)
+            .join("\n"),
         },
       ],
     };
